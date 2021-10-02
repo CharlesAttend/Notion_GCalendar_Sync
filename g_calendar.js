@@ -53,13 +53,16 @@ export const getEvent = async (auth, eventId) => {
 
 export const addEvent = async (auth, event) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
+  if(await getEvent(auth, event.id)){
+    return await updateEvent(auth, event)
+  }
   const newEvent = await calendar.events.insert({
     auth: auth,
     calendarId: CALENDAR_ID,
     resource: event,
   }, (err, event) => {
     if (err) {
-      console.log('There was an error contacting the Calendar service: ' + err);
+      console.log('There was an error contacting the Calendar service during adding event: ' + err);
       return;
     }
     console.log('Event deleted: %s', event.htmlLink);
@@ -75,7 +78,7 @@ export const removeEvent = async (auth, eventId) => {
     eventId : eventId
   }, (err, event) => {
     if (err) {
-      console.log('There was an error contacting the Calendar service: ' + err);
+      console.log('There was an error contacting the Calendar service during delete event: ' + err);
       return;
     }
     console.log('Event deleted: %s', event.htmlLink);
@@ -84,7 +87,20 @@ export const removeEvent = async (auth, eventId) => {
 
 export const updateEvent = async (auth, event) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
-  calendar.events.update()
+  const updatedEvent = await calendar.events.update({
+    auth : auth,
+    calendarId : CALENDAR_ID,
+    eventId: event.id,
+    resource: event,
+
+  }, (err, event) => {
+    if (err) {
+      console.log('There was an error contacting the Calendar service during update event: ' + err);
+      return;
+    }
+    console.log('Event updated: %s', event.htmlLink);
+  })
+  return updatedEvent
 }
 
 
