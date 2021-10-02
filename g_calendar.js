@@ -15,9 +15,8 @@
  * limitations under the License.
  */
 
-// const fs = require('fs');
-// const readline = require('readline');
-// const {google} = require('googleapis');
+import { config } from "dotenv"
+config()
 import fs from 'fs'
 import readline from 'readline'
 import {google} from 'googleapis'
@@ -45,7 +44,7 @@ export const getEvent = async (auth, eventId) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
   const event = await calendar.events.get({auth:auth, calendarId: CALENDAR_ID, eventId: eventId})  
     .catch(error => {
-      console.error("getEvent Not Found");
+      console.error("getEvent Not Found", error);
       return false
     });
   return event
@@ -54,7 +53,7 @@ export const getEvent = async (auth, eventId) => {
 export const addEvent = async (auth, event) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
   if(await getEvent(auth, event.id)){
-    return await updateEvent(auth, event)
+    return 
   }
   const newEvent = await calendar.events.insert({
     auth: auth,
@@ -62,10 +61,10 @@ export const addEvent = async (auth, event) => {
     resource: event,
   }, (err, event) => {
     if (err) {
-      console.log('There was an error contacting the Calendar service during adding event: ' + err);
+      console.error('There was an error contacting the Calendar service during adding event: ' + err);
       return;
     }
-    console.log('Event deleted: %s', event.htmlLink);
+    console.log('Event added: %s', event.config.body);
   })
   return newEvent
 }
@@ -78,10 +77,10 @@ export const removeEvent = async (auth, eventId) => {
     eventId : eventId
   }, (err, event) => {
     if (err) {
-      console.log('There was an error contacting the Calendar service during delete event: ' + err);
+      console.error('There was an error contacting the Calendar service during delete event: ' + err);
       return;
     }
-    console.log('Event deleted: %s', event.htmlLink);
+    console.log('Event deleted: %s', event.config.body);
   })
 }
 
@@ -95,10 +94,10 @@ export const updateEvent = async (auth, event) => {
 
   }, (err, event) => {
     if (err) {
-      console.log('There was an error contacting the Calendar service during update event: ' + err);
+      console.error('There was an error contacting the Calendar service during update event: ' + err);
       return;
     }
-    console.log('Event updated: %s', event.htmlLink);
+    console.log('Event updated: %s', event.config.body);
   })
   return updatedEvent
 }

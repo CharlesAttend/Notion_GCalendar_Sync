@@ -2,7 +2,7 @@
 import { config } from "dotenv"
 config()
 import { Client } from "@notionhq/client"
-import { getEvent, addEvent, updateEvent } from "./g_calendar.js"
+import { getEvent, addEvent, updateEvent, removeEvent } from "./g_calendar.js"
 /**
  * Initialisation of Notion API objects
  */
@@ -29,7 +29,7 @@ export function startSync(Oauth) {
    * Then poll for changes every 5 seconds (5000 milliseconds).
    */ 
   setInitialTaskPageIdToStatusMap(auth).then(() => {
-    setInterval(findAndUpdateCalendarEventForUpdatedTasks, 5000)
+    setInterval(findAndUpdateCalendarEvent, 5000)
     // getTasksFromNotionDatabase()
     //   .then((r) => console.log(r))
   })
@@ -49,31 +49,82 @@ async function setInitialTaskPageIdToStatusMap(auth) {
   console.log("List of event in Google Calendar : \n ", createdTask);
 }
 
-async function findAndUpdateCalendarEventForUpdatedTasks() {
+async function findAndUpdateCalendarEvent() {
   // Get the tasks currently in the database.
   console.log("\nFetching tasks from Notion DB...")
   const currentTasks = await getTasksFromNotionDatabase()
+  await updateCalendarEventForUpdatedTasks(currentTasks);
+  // await updateCalendarEventForRemovedTasks(currentTasks);
+}
 
+async function updateCalendarEventForUpdatedTasks(currentTasks) {
   // Return any tasks that have had their status updated.
   const updatedTasks = findUpdatedTasks(currentTasks)
   console.log(`Found ${updatedTasks.length} updated tasks.`)
+  if(updatedTasks.length !== 0){
+    const filteredTask = updatedTasks
+      .filter(task => task.planned_on.start.length === 29) // test if one date + one hours
+      .map(task => {
+        // Checking if there is an end date 
 
-  updatedTasks.forEach(task => {
-    taskPageIdToStatusMap[task.pageId] = task.planned_on
-    const event = {
-      'id': task.pageId,
-      'summary': task.task,
-      'description': task.description,
-      'start': {
-        'dateTime': task.planned_on.start,
-        'timeZone': 'Europe/Paris',
-      },
-      'end': {
-        'dateTime': task.planned_on.end,
-        'timeZone': 'Europe/Paris',
-      },
-    };
-    addEvent(auth, event)
+        return {
+          pageId: task.pageId,
+          task : task.task,
+          description : task.description,
+          planned_on : task.planned_on,
+        }
+      })
+    console.log(`${updatedTasks.length - filteredTask.length} pages filtered.`);
+    console.log(`${filteredTask.length} pages remaining after.`);
+    console.log(filteredTask);
+  
+    filteredTask.forEach(task => {
+      taskPageIdToStatusMap[task.pageId] = task.planned_on
+
+      
+      let endString = "";
+      if(!task.planned_on.end){
+        const start_date = new Date(task.planned_on.start)
+        //const end = new Date(start_date.setHours(start_date.getHours()+1)).setUTCHours(2           
+        
+        // If not add one hour to the start date by default
+        const end = new Date(start_date.setUTCHours(start_date.getHours()+1))
+        endString = new Date(end).toISOString()
+      }
+      const event = {
+        'id': task.pageId,
+        'summary': task.task,
+        'description': task.description,
+        'start': {
+          'dateTime': task.planned_on.start,
+          'timeZone': 'Europe/Paris',
+        },
+        'end': {
+          'dateTime': endString,
+          'timeZone': 'Europe/Paris',
+        },
+      };
+  
+      if(createdTask[task.pageId]){
+        updateEvent(auth, event)
+      }
+      else{
+        addEvent(auth, event)
+          .then(() => createdTask[task.pageId] = true)
+      }
+    })
+  }
+}
+
+async function updateCalendarEventForRemovedTasks(currentTasks) {
+
+  // Return any tasks that have had their status updated.
+  const removedTasks = findRemovedTasks(currentTasks)
+  console.log(`Found ${removedTasks.length} removed tasks.`)
+
+  removedTasks.forEach(task => {
+    taskPageIdToStatusMap[task.pageId] = task.planned_on    
+    removeEvent(auth, task.id)
   })
 }
 
@@ -116,34 +167,19 @@ async function getTasksFromNotionDatabase() {
   }
 
   console.log(`${pages.length} pages successfully fetched.`)
-
-  const filteredPages = pages
-    .filter(page => page.properties['Planned_on'].date.start.length === 29) // test if date + hours
+  return pages  
     .map(page => {
-      let planned_on = page.properties['Planned_on'].date
-
-      // Checking if there is an end date 
-      if(!planned_on.end){
-        const start_date = new Date(planned_on.start)
-        //const end = new Date(start_date.setHours(start_date.getHours()+1)).setUTCHours(2)
-
-        // If not add one hour to the start date by default
-        const end = new Date(start_date.setUTCHours(start_date.getHours()+1))
-        planned_on.end = new Date(end).toISOString()
-      }
+      const pageId = page.id.replace(/-/g, "") // Making id google calendar friendly
+      const planned_on = page.properties['Planned_on'].date
       const description = page.properties['Description'].rich_text.map(({ plain_text }) => plain_text).join()
       const task = page.properties["Task"].title.map(({ plain_text }) => plain_text).join()
       return {
-        pageId: page.id.replace(/-/g, ""), // Making id google calendar friendly
+        pageId: pageId, 
         task,
         description,
         planned_on,
       }
     })
-    console.log(`${pages.length - filteredPages.length} pages filtered.`);
-    console.log(`${filteredPages.length} pages remaining after.`);
-    console.log(filteredPages);
-  return filteredPages
 }
 
 /**
@@ -154,10 +190,11 @@ async function getTasksFromNotionDatabase() {
  * @returns {Array<{ pageId: string, task: string, description: string, planned_on: {start: string, end: string} }>}
  */
 function findUpdatedTasks(currentTasks) {
-  return currentTasks.filter(currentTask => {
+  const newTask = currentTasks.filter(currentTask => {
     const previousPlannedOn = getPreviousTaskPlannedOn(currentTask)
     return JSON.stringify(currentTask.planned_on) !== JSON.stringify(previousPlannedOn) 
   })
+  return newTask
 }
 
 /**
