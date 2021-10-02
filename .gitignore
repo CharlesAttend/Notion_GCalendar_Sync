@@ -2,3 +2,4 @@ node_modules
 credential/*.json
 test.js
 .env
+.vscode
