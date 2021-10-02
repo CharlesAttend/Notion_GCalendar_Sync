@@ -2,7 +2,7 @@
 import { config } from "dotenv"
 config()
 import { Client } from "@notionhq/client"
-import { getEvent, addEvent, editEvent } from "./g_calendar.js"
+import { getEvent, addEvent, updateEvent } from "./g_calendar.js"
 /**
  * Initialisation of Notion API objects
  */
@@ -50,7 +50,6 @@ async function setInitialTaskPageIdToStatusMap(auth) {
 }
 
 async function findAndUpdateCalendarEventForUpdatedTasks() {
-
   // Get the tasks currently in the database.
   console.log("\nFetching tasks from Notion DB...")
   const currentTasks = await getTasksFromNotionDatabase()
@@ -74,9 +73,7 @@ async function findAndUpdateCalendarEventForUpdatedTasks() {
         'timeZone': 'Europe/Paris',
       },
     };
-
-    addEvent(event)
-
+    addEvent(auth, event)
   })
 }
 
@@ -158,20 +155,21 @@ async function getTasksFromNotionDatabase() {
  */
 function findUpdatedTasks(currentTasks) {
   return currentTasks.filter(currentTask => {
-    const previousModification = getPreviousTaskStatus(currentTask)
-    return JSON.stringify(currentTask.planned_on) !== JSON.stringify(previousModification) 
+    const previousPlannedOn = getPreviousTaskPlannedOn(currentTask)
+    return JSON.stringify(currentTask.planned_on) !== JSON.stringify(previousPlannedOn) 
   })
 }
 
 /**
  * Finds or creates task in local data store and returns its status.
- * @param {{ pageId: string; planned_on: {start: string, end: string} }} task
+ * @param {{ pageId: string; planned_on: {start: string, end: string} }}
  * @returns {string}
  */
-function getPreviousTaskStatus({ pageId, planned_on }) {
+function getPreviousTaskPlannedOn({ pageId, planned_on }) {
   // If this task hasn't been seen before, add to local pageId to status map.
   if (!taskPageIdToStatusMap[pageId]) {
     taskPageIdToStatusMap[pageId] = planned_on
+    return false
   }
   return taskPageIdToStatusMap[pageId]
 }

@@ -21,7 +21,7 @@
 import fs from 'fs'
 import readline from 'readline'
 import {google} from 'googleapis'
-import {saveCredential} from './index.js'
+import {startSync} from './index.js'
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
@@ -29,7 +29,7 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = './credentials/token.json';
-const CALENDARID = process.env.CALENDARID;
+const CALENDAR_ID = process.env.CALENDAR_ID;
 
 getGoogleAuth()
 
@@ -43,10 +43,7 @@ async function getGoogleAuth(){
 
 export const getEvent = async (auth, eventId) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
-  const event = await calendar.events.get({auth:auth, calendarId: CALENDARID, eventId: eventId})  
-    // .then(res => {
-    //   event = res
-    // })
+  const event = await calendar.events.get({auth:auth, calendarId: CALENDAR_ID, eventId: eventId})  
     .catch(error => {
       console.error("getEvent Not Found");
       return false
@@ -54,11 +51,27 @@ export const getEvent = async (auth, eventId) => {
   return event
 }
 
+export const addEvent = async (auth, event) => {
+  const calendar = google.calendar({ version: 'v3', auth: auth});
+  const newEvent = await calendar.events.insert({
+    auth: auth,
+    calendarId: CALENDAR_ID,
+    resource: event,
+  }, (err, event) => {
+    if (err) {
+      console.log('There was an error contacting the Calendar service: ' + err);
+      return;
+    }
+    console.log('Event deleted: %s', event.htmlLink);
+  })
+  return newEvent
+}
+
 export const removeEvent = async (auth, eventId) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
   calendar.events.delete({
     auth : auth,
-    calendarId: CALENDARID,
+    calendarId: CALENDAR_ID,
     eventId : eventId
   }, (err, event) => {
     if (err) {
@@ -69,23 +82,7 @@ export const removeEvent = async (auth, eventId) => {
   })
 }
 
-export function addEvent(auth, event){
-  const calendar = google.calendar({ version: 'v3', auth: auth});
-  calendar.events.insert({
-    auth: auth,
-    calendarId: CALENDARID,
-    resource: event,
-  }, (err, event) => {
-      if (err) {
-        console.log('There was an error contacting the Calendar service: ' + err);
-        return;
-      }
-      console.log('Event created: %s', event.htmlLink);
-    }
-  )
-}
-
-export const editEvent = async (auth, event) => {
+export const updateEvent = async (auth, event) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
   calendar.events.update()
 }
