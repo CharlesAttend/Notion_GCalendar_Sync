@@ -1,5 +1,5 @@
 node_modules
-credential/*.json
+credentials/*.json
 test.js
 .env
 .vscode
