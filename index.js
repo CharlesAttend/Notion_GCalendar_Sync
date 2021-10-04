@@ -54,7 +54,7 @@ async function findAndUpdateCalendarEvent() {
   console.log("\nFetching tasks from Notion DB...")
   const currentTasks = await getTasksFromNotionDatabase()
   await updateCalendarEventForUpdatedTasks(currentTasks);
-  // await updateCalendarEventForRemovedTasks(currentTasks);
+  await updateCalendarEventForRemovedTasks(currentTasks);
 }
 
 async function updateCalendarEventForUpdatedTasks(currentTasks) {
@@ -85,7 +85,7 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
       let endString = "";
       if(!task.planned_on.end){
         const start_date = new Date(task.planned_on.start)
-        endString = new Date(start_date.getTime() - (start_date.getTimezoneOffset() * 60000) + 3600*1000).toISOString();
+        endString = new Date(start_date.getTime() - (start_date.getTimezoneOffset() * 60000) + 3600*1000).toISOString().slice(0, -1);
       }
       const event = {
         'id': task.pageId,
@@ -115,12 +115,12 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
 async function updateCalendarEventForRemovedTasks(currentTasks) {
 
   // Return any tasks that have had their status updated.
-  const removedTasks = findRemovedTasks(currentTasks)
-  console.log(`Found ${removedTasks.length} removed tasks.`)
+  const removedTasksId = findRemovedTasks(currentTasks)
+  console.log(`Found ${removedTasksId.length} removed tasks.`)
 
-  removedTasks.forEach(task => {
-    taskPageIdToStatusMap[task.pageId] = task.planned_on    
-    removeEvent(auth, task.id)
+  removedTasksId.forEach(id => {
+    delete taskPageIdToStatusMap[id]
+    removeEvent(auth, id)
   })
 }
 
@@ -193,6 +193,18 @@ function findUpdatedTasks(currentTasks) {
   return newTask
 }
 
+const findRemovedTasks = (currentTasks) => {
+  const removedTasksId = Object.keys(taskPageIdToStatusMap).filter((taskId) => {
+    let isFound = true
+    currentTasks.forEach((task) => {
+      if(task.pageId  === taskId){
+        isFound = false
+      }
+    })
+    return isFound
+  })
+  return removedTasksId
+}
 /**
  * Finds or creates task in local data store and returns its status.
  * @param {{ pageId: string; planned_on: {start: string, end: string} }}

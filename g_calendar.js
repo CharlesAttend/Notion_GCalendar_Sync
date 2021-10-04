@@ -54,7 +54,7 @@ export const addEvent = async (auth, event) => {
 
 export const removeEvent = async (auth, eventId) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
-  calendar.events.delete({
+  const removedEvent = await calendar.events.delete({
     auth : auth,
     calendarId: CALENDAR_ID,
     eventId : eventId
@@ -65,6 +65,7 @@ export const removeEvent = async (auth, eventId) => {
     }
     console.log('Event deleted: %s', event.config.body);
   })
+  return removeEvent
 }
 
 export const updateEvent = async (auth, event) => {
