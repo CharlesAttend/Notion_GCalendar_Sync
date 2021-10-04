@@ -29,7 +29,7 @@ export function startSync(Oauth) {
    * Then poll for changes every 5 seconds (5000 milliseconds).
    */ 
   setInitialTaskPageIdToStatusMap(auth).then(() => {
-    setInterval(findAndUpdateCalendarEvent, 5000)
+    setInterval(findAndUpdateCalendarEvent, 60000)
     // getTasksFromNotionDatabase()
     //   .then((r) => console.log(r))
   })
