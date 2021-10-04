@@ -63,7 +63,7 @@ export const removeEvent = async (auth, eventId) => {
       console.error('There was an error contacting the Calendar service during delete event: ' + err);
       return;
     }
-    console.log('Event deleted: %s', event.config.body);
+    console.log('Event deleted: %s');
   })
   return removeEvent
 }
