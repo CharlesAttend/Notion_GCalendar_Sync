@@ -85,11 +85,7 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
       let endString = "";
       if(!task.planned_on.end){
         const start_date = new Date(task.planned_on.start)
-        //const end = new Date(start_date.setHours(start_date.getHours()+1)).setUTCHours(2           
-        
-        // If not add one hour to the start date by default
-        const end = new Date(start_date.setUTCHours(start_date.getHours()+1))
-        endString = new Date(end).toISOString()
+        endString = new Date(start_date.getTime() - (start_date.getTimezoneOffset() * 60000) + 3600*1000).toISOString();
       }
       const event = {
         'id': task.pageId,
