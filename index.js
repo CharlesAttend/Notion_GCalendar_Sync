@@ -66,7 +66,6 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
       .filter(task => task.planned_on.start.length === 29) // test if one date + one hours
       .map(task => {
         // Checking if there is an end date 
-
         return {
           pageId: task.pageId,
           task : task.task,
@@ -82,8 +81,8 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
       taskPageIdToStatusMap[task.pageId] = task.planned_on
 
       
-      let endString = "";
-      if(!task.planned_on.end){
+      let endString = task.planned_on.end;
+      if(!endString){
         const start_date = new Date(task.planned_on.start)
         endString = new Date(start_date.getTime() - (start_date.getTimezoneOffset() * 60000) + 3600*1000).toISOString().slice(0, -1);
       }
@@ -186,10 +185,11 @@ async function getTasksFromNotionDatabase() {
  * @returns {Array<{ pageId: string, task: string, description: string, planned_on: {start: string, end: string} }>}
  */
 function findUpdatedTasks(currentTasks) {
-  const newTask = currentTasks.filter(currentTask => {
-    const previousPlannedOn = getPreviousTaskPlannedOn(currentTask)
-    return JSON.stringify(currentTask.planned_on) !== JSON.stringify(previousPlannedOn) 
-  })
+  const newTask = currentTasks
+    .filter(currentTask => {
+      const previousPlannedOn = getPreviousTaskPlannedOn(currentTask)
+      return JSON.stringify(currentTask.planned_on) !== JSON.stringify(previousPlannedOn) 
+    })
   return newTask
 }
 
