@@ -3,7 +3,7 @@ config()
 import fs from 'fs'
 import readline from 'readline'
 import {google} from 'googleapis'
-import {startSync} from './index.js'
+import {startSync} from './notion.js'
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
