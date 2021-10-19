@@ -30,8 +30,6 @@ export function startSync(Oauth) {
    */ 
   setInitialTaskPageIdToStatusMap(auth).then(() => {
     setInterval(findAndUpdateCalendarEvent, 60000)
-    // getTasksFromNotionDatabase()
-    //   .then((r) => console.log(r))
   })
 }
 
@@ -40,27 +38,30 @@ export function startSync(Oauth) {
  * Get and set the initial data store with tasks currently in the database.
  */
 async function setInitialTaskPageIdToStatusMap(auth) {
-  const currentTasks = await getTasksFromNotionDatabase()
+  const currentTasks = await getTasksFromNotionDatabase();
+  // force sync at start 
+  await updateCalendarEventForUpdatedTasks(currentTasks);
+  await updateCalendarEventForRemovedTasks(currentTasks);
   for (const { pageId, planned_on } of currentTasks){
-    taskPageIdToStatusMap[pageId] = planned_on
-    const isAlreadyCreated = await getEvent(auth, pageId) 
-    createdTask[pageId] = isAlreadyCreated ? true : false 
+    taskPageIdToStatusMap[pageId] = planned_on;
+    const isAlreadyCreated = await getEvent(auth, pageId);
+    createdTask[pageId] = isAlreadyCreated ? true : false;
   }
   console.log("List of event in Google Calendar : \n ", createdTask);
 }
 
 async function findAndUpdateCalendarEvent() {
   // Get the tasks currently in the database.
-  console.log("\nFetching tasks from Notion DB...")
-  const currentTasks = await getTasksFromNotionDatabase()
+  console.log("\nFetching tasks from Notion DB...");
+  const currentTasks = await getTasksFromNotionDatabase();
   await updateCalendarEventForUpdatedTasks(currentTasks);
   await updateCalendarEventForRemovedTasks(currentTasks);
 }
 
 async function updateCalendarEventForUpdatedTasks(currentTasks) {
   // Return any tasks that have had their status updated.
-  const updatedTasks = findUpdatedTasks(currentTasks)
-  console.log(`Found ${updatedTasks.length} updated tasks.`)
+  const updatedTasks = findUpdatedTasks(currentTasks);
+  console.log(`Found ${updatedTasks.length} updated tasks.`);
   if(updatedTasks.length !== 0){
     const filteredTask = updatedTasks
       .filter(task => task.planned_on.start.length === 29) // test if one date + one hours
@@ -80,7 +81,6 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
     filteredTask.forEach(task => {
       taskPageIdToStatusMap[task.pageId] = task.planned_on
 
-      
       let endString = task.planned_on.end;
       if(!endString){
         const start_date = new Date(task.planned_on.start)
