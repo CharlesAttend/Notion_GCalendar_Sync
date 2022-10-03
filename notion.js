@@ -98,6 +98,9 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
           'dateTime': endString,
           'timeZone': 'Europe/Paris',
         },
+        'reminders': {
+          'useDefault': true,
+        }
       };
   
       if(createdTask[task.pageId]){
