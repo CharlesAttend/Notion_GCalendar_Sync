@@ -149,9 +149,9 @@ async function getTasksFromNotionDatabase() {
           }
         },
         {
-          property: "Checked",
-          checkbox: {
-            equals: false,
+          property: "Status",
+          status: {
+            does_not_equal: "✔Done",
           }
         }]
       }
