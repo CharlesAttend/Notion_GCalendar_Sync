@@ -46,6 +46,7 @@ async function setInitialTaskPageIdToStatusMap(auth) {
     taskPageIdToStatusMap[pageId] = planned_on;
     const isAlreadyCreated = await getEvent(auth, pageId);
     createdTask[pageId] = isAlreadyCreated ? true : false;
+    await new Promise(r => setTimeout(r, 250));
   }
   console.log("List of event in Google Calendar : \n ", createdTask);
 }
