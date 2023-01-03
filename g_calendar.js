@@ -27,8 +27,8 @@ export const getEvent = async (auth, eventId) => {
   const calendar = google.calendar({ version: 'v3', auth: auth});
   const event = await calendar.events.get({auth:auth, calendarId: CALENDAR_ID, eventId: eventId})  
     .catch(error => {
-      console.error("Error when fetching GCalendar event");
-      console.error(error);
+      console.error("Error when fetching GCalendar event, probably doesn't exist");
+      // console.error(error);
       return false
     });
   return event

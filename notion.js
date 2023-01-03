@@ -103,14 +103,15 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
           'useDefault': true,
         }
       };
-  
-      if(createdTask[task.pageId]){
-        updateEvent(auth, event)
-      }
-      else{
-        addEvent(auth, event)
-          .then(() => createdTask[task.pageId] = true)
-      }
+      new Promise(r => setTimeout(r, 500)).then(() => {
+        if(createdTask[task.pageId]){
+          updateEvent(auth, event)
+        }
+        else{
+          addEvent(auth, event)
+            .then(() => createdTask[task.pageId] = true)
+        }
+      })
     })
   }
 }
