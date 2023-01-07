@@ -82,7 +82,9 @@ export const updateEvent = async (auth, event) => {
       console.error('There was an error contacting the Calendar service during update event: ' + err);
       return;
     }
-    console.log('Event updated: %s', event.config.body);
+    else {
+      console.log('Event updated: %s', event.config.body);
+    }
   })
   return updatedEvent
 }

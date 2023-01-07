@@ -103,7 +103,7 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
           'useDefault': true,
         }
       };
-
+      console.log("Updating event %s ...", task.task);
       await new Promise(resolve => setTimeout(resolve, 500))
       if(createdTask[task.pageId]){
         updateEvent(auth, event)
