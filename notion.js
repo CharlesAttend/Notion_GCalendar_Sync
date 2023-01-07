@@ -79,7 +79,7 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
     console.log(`${filteredTask.length} pages remaining after.`);
     console.log(filteredTask);
   
-    filteredTask.forEach(task => {
+    filteredTask.forEach(async task => {
       taskPageIdToStatusMap[task.pageId] = task.planned_on
 
       let endString = task.planned_on.end;
@@ -103,15 +103,16 @@ async function updateCalendarEventForUpdatedTasks(currentTasks) {
           'useDefault': true,
         }
       };
-      new Promise(r => setTimeout(r, 500)).then(() => {
-        if(createdTask[task.pageId]){
-          updateEvent(auth, event)
-        }
-        else{
-          addEvent(auth, event)
-            .then(() => createdTask[task.pageId] = true)
-        }
-      })
+
+      await new Promise(resolve => setTimeout(resolve, 500))
+      if(createdTask[task.pageId]){
+        updateEvent(auth, event)
+      }
+      else{
+        addEvent(auth, event)
+          .then(() => createdTask[task.pageId] = true)
+      }
+    
     })
   }
 }
