@@ -66,7 +66,7 @@ export const removeEvent = async (auth, eventId) => {
     }
     console.log('Event deleted: %s');
   })
-  return removeEvent
+  return removedEvent
 }
 
 export const updateEvent = async (auth, event) => {
