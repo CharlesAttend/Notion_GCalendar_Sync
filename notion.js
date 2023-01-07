@@ -123,8 +123,9 @@ async function updateCalendarEventForRemovedTasks(currentTasks) {
   const removedTasksId = findRemovedTasks(currentTasks)
   console.log(`Found ${removedTasksId.length} removed tasks.`)
 
-  removedTasksId.forEach(id => {
+  removedTasksId.forEach(async id => {
     delete taskPageIdToStatusMap[id]
+    await new Promise(resolve => setTimeout(resolve, 500))
     removeEvent(auth, id)
   })
 }
